@@ -1,0 +1,139 @@
+<div class="min-h-screen bg-slate-900">
+  <!-- Header -->
+  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-4">
+      <h1 class="text-3xl font-bold text-blue-400">📊 SteamCharts Analyzer</h1>
+      <p class="text-slate-400 text-sm mt-1">Análise em tempo real de jogadores ativos na Steam</p>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Painel de Controles -->
+      <aside class="lg:col-span-1">
+        <div class="bg-slate-800 rounded-lg p-6 border border-slate-700 sticky top-20">
+          <!-- Input App ID -->
+          <div class="mb-6">
+            <label class="block text-sm font-semibold text-slate-200 mb-2">Steam App ID</label>
+            <div class="flex gap-2">
+              <input 
+                [(ngModel)]="appIdInput"
+                type="text"
+                placeholder="Ex: 730"
+                class="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              />
+              <button 
+                (click)="fetchGameData()"
+                [disabled]="isLoading"
+                class="px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:opacity-50 text-white rounded font-semibold transition"
+              >
+                {{ isLoading ? '⏳' : '🔄' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Ordem de Exibição -->
+          <div class="mb-6" *ngIf="gameData">
+            <label class="block text-sm font-semibold text-slate-200 mb-3">Ordem</label>
+            <div class="flex gap-2">
+              <button 
+                (click)="chooseOrder(true)"
+                [class.bg-blue-600]="chronological"
+                [class.bg-slate-700]="!chronological"
+                class="flex-1 py-2 rounded text-sm font-semibold transition hover:opacity-80"
+              >
+                📅 Cronológica
+              </button>
+              <button 
+                (click)="chooseOrder(false)"
+                [class.bg-blue-600]="!chronological"
+                [class.bg-slate-700]="chronological"
+                class="flex-1 py-2 rounded text-sm font-semibold transition hover:opacity-80"
+              >
+                ⏱️ Invertida
+              </button>
+            </div>
+          </div>
+
+          <!-- Seleção de Meses -->
+          <div *ngIf="gameData" class="mb-6">
+            <label class="block text-sm font-semibold text-slate-200 mb-2">Período</label>
+            
+            <select 
+              [(ngModel)]="selectedStartMonth"
+              class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 mb-3 focus:outline-none focus:border-blue-500"
+            >
+              <option *ngFor="let month of gameData.months" [value]="month">{{ month }}</option>
+            </select>
+
+            <select 
+              [(ngModel)]="selectedEndMonth"
+              class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 focus:outline-none focus:border-blue-500"
+            >
+              <option *ngFor="let month of gameData.months" [value]="month">{{ month }}</option>
+            </select>
+          </div>
+
+          <!-- Botão Gerar Gráfico -->
+          <button 
+            (click)="generateGraph()"
+            [disabled]="!gameData || isGenerating"
+            class="w-full py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-600 disabled:opacity-50 text-white rounded font-semibold transition mb-4"
+          >
+            {{ isGenerating ? '⏳ Gerando...' : '📊 Gerar Gráfico' }}
+          </button>
+
+          <!-- Botão Limpar Cache -->
+          <button 
+            (click)="clearCache()"
+            class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded font-semibold transition text-sm"
+          >
+            🗑️ Limpar Cache
+          </button>
+        </div>
+
+        <!-- Histórico -->
+        <div *ngIf="searchHistory.length > 0" class="bg-slate-800 rounded-lg p-6 border border-slate-700 mt-6">
+          <h3 class="font-semibold text-slate-200 mb-3">📝 Histórico</h3>
+          <div class="space-y-2 max-h-64 overflow-y-auto">
+            <button 
+              *ngFor="let item of searchHistory"
+              (click)="loadFromHistory(item.app_id)"
+              class="block w-full text-left px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm text-slate-300 transition truncate"
+              [title]="item.game_name || item.app_id"
+            >
+              {{ item.game_name || 'App ' + item.app_id }} <span class="text-xs text-slate-500">({{ item.total_months }})</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Área Principal -->
+      <section class="lg:col-span-3">
+        <!-- Mensagens -->
+        <div *ngIf="errorMessage" class="mb-4 p-4 bg-red-900 text-red-100 rounded border border-red-700">
+          {{ errorMessage }}
+        </div>
+        <div *ngIf="successMessage" class="mb-4 p-4 bg-green-900 text-green-100 rounded border border-green-700">
+          {{ successMessage }}
+        </div>
+
+        <!-- Gráfico -->
+        <div *ngIf="graphData" class="bg-slate-800 rounded-lg p-6 border border-slate-700">
+          <h2 class="text-xl font-semibold text-slate-100 mb-4">
+            {{ graphData.game_name || 'App ' + graphData.app_id }}
+            <span class="text-sm text-slate-400">({{ graphData.chronological ? 'Cronológica' : 'Invertida' }})</span>
+          </h2>
+          <app-chart [data]="graphData"></app-chart>
+        </div>
+
+        <!-- Placeholder -->
+        <div *ngIf="!graphData" class="bg-slate-800 rounded-lg p-12 border-2 border-dashed border-slate-700 text-center">
+          <p class="text-4xl mb-4">📊</p>
+          <h3 class="text-xl font-semibold text-slate-300 mb-2">Nenhum gráfico gerado</h3>
+          <p class="text-slate-400">Insira um App ID e clique em "Gerar Gráfico" para começar</p>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>

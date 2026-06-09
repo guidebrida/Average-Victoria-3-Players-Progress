@@ -1,0 +1,56 @@
+/* Global Styles */
+:root {
+  --steam-bg-main: #1B2838;
+  --steam-bg-secondary: #0C1419;
+  --steam-text-primary: #C7D5E0;
+  --steam-text-muted: #8FA3B3;
+  --steam-accent: #1A9FD8;
+  --steam-accent-hover: #16688D;
+  --steam-border: #566573;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--steam-bg-main);
+  color: var(--steam-text-primary);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--steam-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--steam-accent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--steam-accent-hover);
+}
+
+/* Utility Classes */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.glass-effect {
+  background: rgba(12, 20, 25, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--steam-border);
+  border-radius: 8px;
+}
